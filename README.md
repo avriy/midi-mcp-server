@@ -112,7 +112,7 @@ const composition = {
 For example, the prompt below, which is a request to create a minor scale 8-bar choral piece, can be processed by the server:
 
 ```text
-8小節の合唱曲を作って。
+8-bar choral piece.
 若干マイナー調で、メロディックな音階を作ってほしい
 ```
 

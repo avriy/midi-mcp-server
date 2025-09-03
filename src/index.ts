@@ -14,7 +14,7 @@ import MidiWriter from 'midi-writer-js';
 
 interface MidiNote {
   pitch: number | string;
-  beat?: number; // 拍単位での位置（1.0 = 1拍目、1.5 = 1拍目と2拍目の間）
+  beat?: number; // Position in beats (1.0 = 1st beat, 1.5 = between 1st and 2nd beat)
   startTime?: number;
   time?: number;
   duration: string; // 文字列型に変更
@@ -74,17 +74,17 @@ class MidiMcpServer {
       tools: [
         {
           name: "create_midi",
-          description: "テキスト形式の音楽データからMIDIファイルを生成します。compositionが長くなる場合はinputSchemaを一度JSONファイルに書き出して読み込んで渡すようにすると安定します。",
+          description: "Generates MIDI files from text-based music data. If the composition is long, it is more stable to write the inputSchema to a JSON file and then read and pass it.",
           inputSchema: {
             type: "object",
             properties: {
               title: {
                 type: "string",
-                description: "曲のタイトル",
+                description: "Title of the song",
               },
               composition: {
                 type: "object",
-                description: "音楽データのオブジェクト",
+                description: "Music data object",
                 properties: {
                   bpm: { type: "number" },
                   timeSignature: {
@@ -115,7 +115,7 @@ class MidiMcpServer {
                               duration: {
                                 type: "string",
                                 enum: ["1", "2", "4", "8", "16", "32", "64"],
-                                description: "音符の長さ（'1'=全音符, '2'=2分音符, '4'=4分音符, '8'=8分音符, '16'=16分音符, '32'=32分音符, '64'=64分音符）"
+                                description: "Note duration ('1'=whole note, '2'=half note, '4'=quarter note, '8'=eighth note, '16'=sixteenth note, '32'=thirty-second note, '64'=sixty-fourth note)"
                               },
                               velocity: { type: "number" }
                             }
@@ -129,11 +129,11 @@ class MidiMcpServer {
               },
               composition_file: {
                 type: "string",
-                description: "音楽データが含まれるJSONファイルの絶対パス。compositionが大きい場合はこちらを使用してください。"
+                description: "Absolute path to the JSON file containing music data. Use this if the composition is large."
               },
               output_path: {
                 type: "string",
-                description: "出力ファイル絶対パス",
+                description: "Absolute path to the output file",
               },
             },
             required: ["title", "output_path"],
@@ -171,7 +171,7 @@ class MidiMcpServer {
               method: "notifications/progress",
               params: {
                 progress: 0,
-                message: "MIDI生成を開始しました"
+                message: "MIDI generation started"
               }
             });
 
@@ -181,7 +181,7 @@ class MidiMcpServer {
             if (!args.composition && !args.composition_file) {
               throw new McpError(
                   ErrorCode.InvalidParams,
-                  "composition または composition_file のいずれかを指定する必要があります"
+                  "message: `An error occurred during MIDI generation: ${(error as Error).message}`"
               );
             }
 
@@ -248,7 +248,7 @@ class MidiMcpServer {
               method: "notifications/progress",
               params: {
                 progress: 100,
-                message: "MIDI生成が完了しました"
+                message: "MIDI generation completed"
               }
             });
 
@@ -256,7 +256,7 @@ class MidiMcpServer {
               content: [
                 {
                   type: "text",
-                  text: `「${args.title}」のMIDIファイルを生成しました。ファイルは ${midiFilePath} に保存されました。`,
+                  text: `MIDI file for "${args.title}" generated. File saved to ${midiFilePath}.`,
                 },
               ],
             };
@@ -265,7 +265,7 @@ class MidiMcpServer {
               content: [
                 {
                   type: "text",
-                  text: `エラーが発生しました: ${(error as Error).message}`,
+                  text: `An error occurred: ${(error as Error).message}`,
                 },
               ],
               isError: true,
@@ -322,7 +322,7 @@ class MidiMcpServer {
         method: "notifications/progress",
         params: {
           progress: progress,
-          message: `トラック ${processedTracks}/${totalTracks} を処理中...`
+          message: `Processing track ${processedTracks}/${totalTracks}...`
         }
       });
     }
@@ -444,7 +444,7 @@ class MidiMcpServer {
 
       return outputFilePath;
     } catch (error) {
-      console.error("MIDI生成中にエラーが発生しました:", error);
+      console.error("An error occurred during MIDI generation:", error);
       throw new McpError(
           ErrorCode.InternalError,
           `MIDI生成中にエラーが発生しました: ${(error as Error).message}`
